@@ -6,6 +6,7 @@ from rest_framework import serializers, status
 from repairsapi.models import ServiceTicket
 from repairsapi.models.customer import Customer
 from repairsapi.models.employee import Employee
+from datetime import datetime
 
 
 class TicketView(ViewSet):
@@ -49,6 +50,12 @@ class TicketView(ViewSet):
             if request.query_params['status'] == "all":
                 service_tickets = ServiceTicket.objects.all()
 
+            if request.query_params['status'] == "unclaimed":
+                service_tickets = ServiceTicket.objects.filter(date_completed__isnull=True, employee_id__isnull=True)
+
+            if request.query_params['status'] == "inprogress":
+                service_tickets = ServiceTicket.objects.filter(date_completed__isnull=True, employee_id__isnull=False)
+
         else:
             service_tickets = ServiceTicket.objects.all()
 
@@ -72,10 +79,16 @@ class TicketView(ViewSet):
         ticket = ServiceTicket.objects.get(pk=pk)
 
         employee_id = request.data['employee']['id']
+        # date_completed = request.data['date_completed']
+        date_completed = request.data['date_completed']
 
         assigned_employee = Employee.objects.get(pk=employee_id)
 
         ticket.employee = assigned_employee
+        ticket.date_completed = date_completed
+        # ticket.date_completed = date_completed
+
+         
 
         ticket.save()
 
